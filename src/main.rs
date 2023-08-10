@@ -1,7 +1,8 @@
-use aws_lambda_events::event::s3::S3Event;
+use aws_lambda_events::event::s3::{S3Event};
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::{config::Region,types::AttributeValue,Client, Error as DynamoError};
+
 
 pub struct Parts {
     pub patrs_id: String,
@@ -25,10 +26,26 @@ pub struct Parts {
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
 /// - https://github.com/aws-samples/serverless-rust-demo/
-async fn function_handler(_event: LambdaEvent<S3Event>) -> Result<(), Error> {
+async fn function_handler(s3_event: LambdaEvent<S3Event>) -> Result<(), Error> {
     // Extract some useful information from the request
-    // DynamoDBクライアント用意
     println!("S3 Event Call");
+    //if let Some(record) = event.payload.records.first() {
+    //    if let  eventName.ObjectCreated:Put  { s3 } = record {
+    //        let file_name = s3.object.key.clone();
+    //        println!("File name: {}", file_name);
+    //    }
+    //}
+    // S3Eventレコードを処理する部分
+    for record in s3_event.payload.records {
+        let event_name : Option<String> =  record.event_name.clone();
+        println!("event name: {}", event_name.unwrap());
+        if record.event_name.clone() == Some(String::from("ObjectCreated:Put")) {
+            let file_name  = record.s3.object.key.clone().unwrap();
+            println!("File name: {}", file_name);
+        }
+    }
+
+    // DynamoDBクライアント用意
     let region_provider = RegionProviderChain::first_try(Region::new("ap-northeast-1"));
     let config = aws_config::from_env().region(region_provider).load().await;
     let client = Client::new(&config);
