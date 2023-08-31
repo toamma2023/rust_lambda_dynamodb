@@ -29,22 +29,12 @@ pub struct Parts {
 async fn function_handler(s3_event: LambdaEvent<S3Event>) -> Result<(), Error> {
     // Extract some useful information from the request
     println!("S3 Event Call");
-    //if let Some(record) = event.payload.records.first() {
-    //    if let  eventName.ObjectCreated:Put  { s3 } = record {
-    //        let file_name = s3.object.key.clone();
-    //        println!("File name: {}", file_name);
-    //    }
-    //}
-    // S3Eventレコードを処理する部分
-    for record in s3_event.payload.records {
-        let event_name : Option<String> =  record.event_name.clone();
-        println!("event name: {}", event_name.unwrap());
-        if record.event_name.clone() == Some(String::from("ObjectCreated:Put")) {
-            let file_name  = record.s3.object.key.clone().unwrap();
-            println!("File name: {}", file_name);
-        }
-    }
 
+    // S3 EventからFile名を取得
+    let file_name = get_file_name(s3_event);
+
+
+    /* */
     // DynamoDBクライアント用意
     let region_provider = RegionProviderChain::first_try(Region::new("ap-northeast-1"));
     let config = aws_config::from_env().region(region_provider).load().await;
@@ -68,6 +58,19 @@ async fn function_handler(s3_event: LambdaEvent<S3Event>) -> Result<(), Error> {
     println!("Put call");
     put_item_manually(&client, parts).await?;
     Ok(())
+}
+
+// S3Eventレコードを処理する部分
+fn get_file_name(s3_event:LambdaEvent<S3Event>)-> Option<String>{
+    for record in s3_event.payload.records {
+        let event_name : String =  record.event_name.clone().unwrap();
+        println!("event name: {}", event_name);
+        if event_name == String::from("ObjectCreated:Put") {
+            return record.s3.object.key.clone();
+            //println!("File name: {}", file_name);
+        }
+    }
+    None
 }
 
 async fn put_item_manually(client: &Client, parts: Parts) -> Result<(), DynamoError> {
