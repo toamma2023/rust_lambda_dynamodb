@@ -20,7 +20,9 @@ aws_lambda_events = { version = "0.10.0", default-features = false, features = [
 lambda_runtime = "0.8.1"
 aws-config = "0.56.0"
 aws-sdk-dynamodb = "0.29.0"
+aws-sdk-s3 = "0.30.0"
 tokio = { version = "1", features = ["full"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
 
+calamine = "0.22.0"
